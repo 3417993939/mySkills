@@ -1,12 +1,20 @@
-[submodule "gpui-component"]
-	path = gpui-component
-	url = https://github.com/longbridge/gpui-component.git
 [submodule "mattpocock_skills"]
 	path = mattpocock_skills
 	url = https://github.com/mattpocock/skills.git
+    branch = main
 [submodule "anthropics_skills"]
 	path = anthropics_skills
 	url = https://github.com/anthropics/skills.git
+    branch = main
 [submodule "vercel_labs_agent_skills"]
 	path = vercel_labs_agent_skills
 	url = https://github.com/vercel-labs/agent-skills.git
+    branch = main
+[submodule "agents365_ai_drawio_skill"]
+	path = agents365_ai_drawio_skill
+	url = https://github.com/Agents365-ai/drawio-skill.git
+    branch = main
+[submodule "gpui-kit"]
+	path = gpui-kit
+	url = https://github.com/longbridge/gpui-kit.git
+    branch = main
