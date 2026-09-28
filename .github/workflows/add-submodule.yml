@@ -1,0 +1,102 @@
+name: Add Submodule
+
+# 手动触发：填入仓库地址，自动将其添加为子模块
+on:
+  workflow_dispatch:
+    inputs:
+      repo_url:
+        description: '要添加的仓库地址，例如 https://github.com/cathrynlavery/diagram-design.git'
+        required: true
+        type: string
+      path:
+        description: '本地路径（留空则按 owner_repo 自动生成，如 cathrynlavery_diagram_design）'
+        required: false
+        type: string
+      branch:
+        description: '要跟踪的远端分支'
+        required: false
+        default: 'main'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  add-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add submodule and push
+        env:
+          REPO_URL: ${{ inputs.repo_url }}
+          CUSTOM_PATH: ${{ inputs.path }}
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          set -euo pipefail
+
+          # 1. 规范化 URL：去掉末尾斜杠和 .git
+          url="${REPO_URL%/}"
+          url="${url%.git}"
+
+          # 2. 从 GitHub URL 解析 owner / repo
+          owner_repo="${url#*github.com/}"
+          owner="${owner_repo%%/*}"
+          repo="${owner_repo##*/}"
+
+          # 3. 计算本地路径：优先用输入，否则 owner_repo 转小写下划线
+          if [ -n "${CUSTOM_PATH}" ]; then
+            path="${CUSTOM_PATH}"
+          else
+            path="$(printf '%s_%s' "${owner}" "${repo}" | tr '[:upper:]' '[:lower:]' | tr '-' '_')"
+          fi
+
+          echo "repo_url = ${url}.git"
+          echo "owner    = ${owner}"
+          echo "repo     = ${repo}"
+          echo "path     = ${path}"
+          echo "branch   = ${BRANCH}"
+
+          # 4. 安全检查：命中任一条件则忽略本次任务（直接成功退出，不提交）
+          existing_paths="$(git config -f .gitmodules --get-regexp '\.path$' 2>/dev/null | awk '{print $2}' || true)"
+          existing_urls="$(git config -f .gitmodules --get-regexp '\.url$' 2>/dev/null | awk '{print $2}' || true)"
+          skip_reason=""
+
+          # a) index 中已存在该路径（gitlink 已存在）
+          if git ls-files --error-unmatch -- "${path}" >/dev/null 2>&1; then
+            skip_reason="路径 [${path}] 已存在于 index（gitlink 已存在）"
+          # b) .gitmodules 中已存在该路径
+          elif printf '%s\n' "${existing_paths}" | grep -qxF "${path}"; then
+            skip_reason=".gitmodules 中已存在路径 [${path}]"
+          # c) .gitmodules 中已存在相同的仓库地址（同一仓库已添加，忽略 .git 后缀与大小写）
+          elif printf '%s\n' "${existing_urls}" | sed 's/\.git$//' | grep -qxiF "${url}"; then
+            skip_reason=".gitmodules 中已存在相同仓库地址 [${url}.git]"
+          # d) 工作区目录已存在且非空
+          elif [ -d "${path}" ] && [ -n "$(ls -A "${path}" 2>/dev/null)" ]; then
+            skip_reason="工作区目录 [${path}] 已存在且非空"
+          fi
+
+          if [ -n "${skip_reason}" ]; then
+            echo "::warning::忽略本次任务：${skip_reason}"
+            exit 0
+          fi
+
+          # 5. 配置提交身份
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # 6. 添加子模块（跟踪指定分支）
+          git submodule add -b "${BRANCH}" "${url}.git" "${path}"
+
+          # 7. 提交并推送
+          git add -A
+          if git diff --cached --quiet; then
+            echo "没有变化，跳过提交"
+          else
+            git commit -m "chore: add submodule ${path}"
+            git push
+          fi
