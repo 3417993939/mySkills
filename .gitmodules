@@ -18,3 +18,6 @@
 	path = gpui-kit
 	url = https://github.com/longbridge/gpui-kit.git
     branch = main
+[submodule "gpui-component"]
+	path = gpui-component
+	url = https://github.com/longbridge/gpui-component.git
