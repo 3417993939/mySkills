@@ -14,7 +14,7 @@
 	path = agents365_ai_drawio_skill
 	url = https://github.com/Agents365-ai/drawio-skill.git
     branch = main
-[submodule "gpui-component"]
-	path = gpui-component
-	url = https://github.com/longbridge/gpui-component.git
-    branch = main
+[submodule "gpui-kit"]
+	path = gpui-kit
+	url = https://github.com/longbridge/gpui-kit.git
+	branch = main
