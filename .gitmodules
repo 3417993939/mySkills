@@ -18,3 +18,7 @@
 	path = gpui-kit
 	url = https://github.com/longbridge/gpui-kit.git
 	branch = main
+[submodule "cathrynlavery_diagram_design"]
+	path = cathrynlavery_diagram_design
+	url = https://github.com/cathrynlavery/diagram-design.git
+	branch = main
