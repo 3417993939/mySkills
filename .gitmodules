@@ -22,3 +22,7 @@
 	path = cathrynlavery_diagram_design
 	url = https://github.com/cathrynlavery/diagram-design.git
 	branch = main
+[submodule "voltagent_awesome_design_md"]
+	path = voltagent_awesome_design_md
+	url = https://github.com/VoltAgent/awesome-design-md.git
+	branch = main
